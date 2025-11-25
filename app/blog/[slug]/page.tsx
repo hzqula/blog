@@ -1,22 +1,96 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { ArrowLeft, Clock, Calendar } from "lucide-react"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { getPostBySlug, posts } from "@/lib/posts"
+import Link from "next/link";
+import Image from "next/image"; // Import Image
+import { notFound } from "next/navigation";
+import { ArrowLeft, Clock, Calendar } from "lucide-react";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { getPostBySlug, getAllPosts } from "@/lib/posts";
+import { documentToReactComponents } from "@contentful/rich-text-react-renderer";
+import { BLOCKS, MARKS } from "@contentful/rich-text-types";
+
+// Konfigurasi styling untuk Rich Text
+const renderOptions = {
+  renderNode: {
+    [BLOCKS.PARAGRAPH]: (node: any, children: any) => (
+      <p className="text-foreground/85 leading-relaxed mb-4 text-justify">
+        {children}
+      </p>
+    ),
+    [BLOCKS.HEADING_2]: (node: any, children: any) => (
+      <h2 className="text-xl font-serif font-semibold mt-10 mb-4 text-foreground">
+        {children}
+      </h2>
+    ),
+    [BLOCKS.HEADING_3]: (node: any, children: any) => (
+      <h3 className="text-lg font-serif font-semibold mt-8 mb-3 text-foreground">
+        {children}
+      </h3>
+    ),
+    [BLOCKS.UL_LIST]: (node: any, children: any) => (
+      <ul className="list-disc pl-5 mb-4 text-foreground/85 space-y-2">
+        {children}
+      </ul>
+    ),
+    [BLOCKS.OL_LIST]: (node: any, children: any) => (
+      <ol className="list-decimal pl-5 mb-4 text-foreground/85 space-y-2">
+        {children}
+      </ol>
+    ),
+    [BLOCKS.QUOTE]: (node: any, children: any) => (
+      <blockquote className="border-l-4 border-primary pl-4 italic my-6 text-muted-foreground">
+        {children}
+      </blockquote>
+    ),
+    [BLOCKS.EMBEDDED_ASSET]: (node: any) => {
+      const { title, file } = node.data.target.fields;
+
+      if (!file.contentType.includes("image")) {
+        return null;
+      }
+
+      return (
+        <div className="my-8 relative w-full h-auto rounded-lg overflow-hidden border border-border">
+          <Image
+            src={`https:${file.url}`}
+            alt={title || "Blog Image"}
+            width={file.details.image.width}
+            height={file.details.image.height}
+            className="w-full h-auto object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
+          />
+        </div>
+      );
+    },
+  },
+  renderMark: {
+    [MARKS.BOLD]: (text: any) => (
+      <strong className="font-semibold text-foreground">{text}</strong>
+    ),
+    [MARKS.CODE]: (text: any) => (
+      <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-primary">
+        {text}
+      </code>
+    ),
+  },
+};
 
 export async function generateStaticParams() {
+  const posts = await getAllPosts();
   return posts.map((post) => ({
     slug: post.slug,
-  }))
+  }));
 }
 
-export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
-  const post = getPostBySlug(slug)
+export default async function BlogPostPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
 
   if (!post) {
-    notFound()
+    notFound();
   }
 
   return (
@@ -25,18 +99,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       <main className="flex-1">
         <article className="container mx-auto px-6 py-12 md:py-20">
           <div className="max-w-2xl mx-auto">
-            {/* Back link */}
             <Link
               href="/blog"
               className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to blog
+              Kembali ke Blog
             </Link>
 
-            {/* Post header */}
             <header className="mb-10 pb-8 border-b-2 border-foreground">
-              <span className="text-xs font-medium text-primary uppercase tracking-wide">{post.category}</span>
+              <span className="text-xs font-medium text-primary uppercase tracking-wide">
+                {post.category}
+              </span>
               <h1 className="text-3xl md:text-4xl font-serif font-semibold leading-tight mt-3 mb-4 text-balance">
                 {post.title}
               </h1>
@@ -47,78 +121,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
-                  {post.readTime}
+                  {post.readTime} {/* Ini sekarang otomatis */}
                 </span>
               </div>
             </header>
 
-            {/* Post content */}
             <div className="prose prose-neutral max-w-none">
-              {post.content.split("\n").map((paragraph, index) => {
-                const trimmed = paragraph.trim()
-                if (!trimmed) return null
-
-                if (trimmed.startsWith("## ")) {
-                  return (
-                    <h2 key={index} className="text-xl font-serif font-semibold mt-10 mb-4 text-foreground">
-                      {trimmed.replace("## ", "")}
-                    </h2>
-                  )
-                }
-
-                if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
-                  return (
-                    <p key={index} className="font-semibold mb-2 text-foreground">
-                      {trimmed.replace(/\*\*/g, "")}
-                    </p>
-                  )
-                }
-
-                if (trimmed.startsWith("**")) {
-                  const parts = trimmed.split("**")
-                  return (
-                    <p key={index} className="text-foreground/85 leading-relaxed mb-4 text-justify">
-                      {parts.map((part, i) =>
-                        i % 2 === 1 ? (
-                          <strong key={i} className="text-foreground">
-                            {part}
-                          </strong>
-                        ) : (
-                          part
-                        ),
-                      )}
-                    </p>
-                  )
-                }
-
-                if (trimmed.match(/^\d\./)) {
-                  return (
-                    <p key={index} className="text-foreground/85 leading-relaxed mb-2 pl-4">
-                      {trimmed}
-                    </p>
-                  )
-                }
-
-                if (trimmed.startsWith("- ")) {
-                  return (
-                    <p key={index} className="text-foreground/85 leading-relaxed mb-2 pl-4">
-                      • {trimmed.replace("- ", "")}
-                    </p>
-                  )
-                }
-
-                return (
-                  <p key={index} className="text-foreground/85 leading-relaxed mb-4 text-justify">
-                    {trimmed}
-                  </p>
-                )
-              })}
+              {documentToReactComponents(post.content, renderOptions)}
             </div>
 
-            {/* Post footer */}
             <div className="mt-12 pt-8 border-t border-border">
               <p className="text-muted-foreground text-sm italic">
-                Thank you for reading. If you enjoyed this article, feel free to share it.
+                Semoga ketemu di tulisan lainnya. Semoga:)
               </p>
             </div>
           </div>
@@ -126,5 +140,5 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       </main>
       <Footer />
     </div>
-  )
+  );
 }
