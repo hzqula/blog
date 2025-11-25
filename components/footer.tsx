@@ -1,5 +1,5 @@
-import Link from "next/link"
-import { Github, Twitter, Linkedin, Mail } from "lucide-react"
+import Link from "next/link";
+import { Github, Twitter, Linkedin, Mail, Instagram } from "lucide-react";
 
 export function Footer() {
   return (
@@ -8,48 +8,58 @@ export function Footer() {
         <div className="grid md:grid-cols-3 gap-8">
           {/* Brand */}
           <div>
-            <h3 className="font-bold text-lg uppercase mb-4">Your Name</h3>
+            <h3 className="font-bold text-lg uppercase mb-4">Muhammad Faruq</h3>
             <p className="text-background/70 text-sm leading-relaxed">
-              Writer, designer, and creative thinker sharing ideas through words.
+              Isinya banyakan absurd, teknologi, absurd, review buku, dan
+              absurd.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold mb-4">Navigate</h4>
+            <h4 className="font-semibold mb-4">Halaman</h4>
             <nav className="flex flex-col gap-2">
-              <Link href="/" className="text-sm text-background/70 hover:text-background transition-colors">
-                Home
+              <Link
+                href="/"
+                className="text-sm text-background/70 hover:text-background transition-colors"
+              >
+                Cover
               </Link>
-              <Link href="/blog" className="text-sm text-background/70 hover:text-background transition-colors">
+              <Link
+                href="/blog"
+                className="text-sm text-background/70 hover:text-background transition-colors"
+              >
                 Blog
               </Link>
-              <Link href="/about" className="text-sm text-background/70 hover:text-background transition-colors">
-                About
+              <Link
+                href="/about"
+                className="text-sm text-background/70 hover:text-background transition-colors"
+              >
+                Tentang
               </Link>
             </nav>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="font-semibold mb-4">Connect</h4>
+            <h4 className="font-semibold mb-4">Tautkan</h4>
             <div className="flex items-center gap-3">
               <Link
-                href="mailto:hello@example.com"
+                href="mailto:hellhzqoolao@gmail.com"
                 className="w-9 h-9 border border-background/30 flex items-center justify-center hover:border-background hover:bg-background hover:text-foreground transition-colors"
               >
                 <Mail className="h-4 w-4" />
               </Link>
               <Link
-                href="https://twitter.com"
+                href="https://instagram.com/muhammadfaruq.hz"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 border border-background/30 flex items-center justify-center hover:border-background hover:bg-background hover:text-foreground transition-colors"
               >
-                <Twitter className="h-4 w-4" />
+                <Instagram className="h-4 w-4" />
               </Link>
               <Link
-                href="https://github.com"
+                href="https://github.com/hzqula"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 border border-background/30 flex items-center justify-center hover:border-background hover:bg-background hover:text-foreground transition-colors"
@@ -57,7 +67,7 @@ export function Footer() {
                 <Github className="h-4 w-4" />
               </Link>
               <Link
-                href="https://linkedin.com"
+                href="https://linkedin.com/muhammad-faruq-hz"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 border border-background/30 flex items-center justify-center hover:border-background hover:bg-background hover:text-foreground transition-colors"
@@ -69,9 +79,11 @@ export function Footer() {
         </div>
 
         <div className="mt-10 pt-6 border-t border-background/20 text-center">
-          <p className="text-xs text-background/50">© {new Date().getFullYear()} Your Name. All rights reserved.</p>
+          <p className="text-xs text-background/50">
+            © {new Date().getFullYear()} Muhammad Faruq. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
-  )
+  );
 }
