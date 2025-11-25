@@ -43,7 +43,7 @@ export function Header() {
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-64">
-            <nav className="flex flex-col gap-4 mt-8">
+            <nav className="flex items-center flex-col gap-4 mt-8">
               <Link
                 href="/"
                 className="text-lg font-medium hover:text-primary transition-colors"
