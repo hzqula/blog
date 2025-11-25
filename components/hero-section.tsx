@@ -6,20 +6,20 @@ import { Button } from "@/components/ui/button";
 export function HeroSection() {
   return (
     <section className="container mx-auto px-6 py-16 md:py-24">
-      <div className="grid md:grid-cols-2 gap-12 items-center">
+      <div className="grid lg:grid-cols-[auto_1fr] gap-12 items-center">
         {/* Illustration */}
-        <div className="flex justify-center md:justify-start order-1 md:order-0">
-          <div className="relative w-64 h-62 md:w-lg border-2 border-foreground">
+        <div className="flex justify-center md:justify-start order-0">
+          <div className="w-full md:w-lg border-2 border-foreground">
             <Image
               src="/avatar-illustration.png"
               alt="Personal illustration"
-              fill
+              width={1000}
+              height={1000}
               loading="eager"
-              className="object-contain"
+              className="object-contain w-full h-auto"
             />
           </div>
         </div>
-
         {/* Text content */}
         <div>
           <h1 className="text-3xl md:text-4xl font-serif font-semibold leading-tight mb-6">
