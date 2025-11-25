@@ -1,24 +1,35 @@
 import { client } from "./contentful";
+import { Document } from "@contentful/rich-text-types";
+import { documentToPlainTextString } from "@contentful/rich-text-plain-text-renderer";
 
 export interface Post {
-  id: string; // Contentful ID adalah string, bukan number
+  id: string;
   title: string;
   excerpt: string;
-  content: string;
+  content: Document;
   date: string;
   slug: string;
   readTime: string;
   category: string;
 }
 
-// Fungsi helper untuk memformat tanggal (opsional, sesuaikan format yang diinginkan)
+// Helper format tanggal
 const formatDate = (dateString: string) => {
   const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
     month: "long",
     day: "numeric",
   };
-  return new Date(dateString).toLocaleDateString("en-US", options);
+  return new Date(dateString).toLocaleDateString("id-ID", options);
+};
+
+// Helper kalkulasi Read Time
+const calculateReadTime = (document: Document): string => {
+  const text = documentToPlainTextString(document);
+  const wordsPerMinute = 200;
+  const words = text.trim().split(/\s+/).length;
+  const minutes = Math.ceil(words / wordsPerMinute);
+  return `${minutes} menit baca`;
 };
 
 export async function getAllPosts(): Promise<Post[]> {
@@ -34,7 +45,7 @@ export async function getAllPosts(): Promise<Post[]> {
     content: item.fields.content,
     date: formatDate(item.fields.date),
     slug: item.fields.slug,
-    readTime: item.fields.readTime,
+    readTime: calculateReadTime(item.fields.content),
     category: item.fields.category,
   }));
 }
@@ -55,7 +66,7 @@ export async function getPostBySlug(slug: string): Promise<Post | undefined> {
       content: item.fields.content,
       date: formatDate(item.fields.date),
       slug: item.fields.slug,
-      readTime: item.fields.readTime,
+      readTime: calculateReadTime(item.fields.content),
       category: item.fields.category,
     };
   }
