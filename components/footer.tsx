@@ -67,7 +67,7 @@ export function Footer() {
                 <Github className="h-4 w-4" />
               </Link>
               <Link
-                href="https://linkedin.com/muhammad-faruq-hz"
+                href="https://linkedin.com/in/muhammad-faruq-hz"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 border border-background/30 flex items-center justify-center hover:border-background hover:bg-background hover:text-foreground transition-colors"
