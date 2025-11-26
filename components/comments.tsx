@@ -2,7 +2,7 @@
 "use client";
 
 import { useSession, signIn, signOut } from "next-auth/react";
-import { useState, useEffect } from "react"; // Tambah useEffect
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -31,19 +31,44 @@ export default function Comments({
   const { data: session } = useSession();
   const router = useRouter();
 
-  // STATE BARU: Kita simpan komentar di state agar bisa dimanipulasi instan
-  const [comments, setComments] = useState<CommentType[]>(initialComments);
-
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // STATE TERPISAH: Jangan campur aduk data server dan lokal
+  const [optimisticComments, setOptimisticComments] = useState<CommentType[]>(
+    []
+  );
+  const [deletedCommentIds, setDeletedCommentIds] = useState<string[]>([]);
+
+  // Loading state untuk tombol hapus spesifik
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const OWNER_EMAIL = "hzqoola@gmail.com";
 
-  // Efek: Jika server berhasil fetch data baru (misal saat navigasi balik), sync state lokal
-  useEffect(() => {
-    setComments(initialComments);
-  }, [initialComments]);
+  // LOGIKA PENGGABUNGAN CERDAS (The Smart Merge)
+  // Kita menggabungkan data server (initialComments) dengan data lokal (optimistic)
+  // Sambil memfilter data yang sudah dihapus secara lokal
+  const displayComments = useMemo(() => {
+    // 1. Gabungkan komentar server + komentar baru lokal
+    const combined = [...optimisticComments, ...initialComments];
+
+    // 2. Filter duplikat (jika server akhirnya sudah memuat komentar baru kita)
+    // Kita cek berdasarkan isi pesan & email karena ID server dan lokal beda
+    const uniqueComments = combined.filter(
+      (comment, index, self) =>
+        index ===
+        self.findIndex(
+          (c) =>
+            c.id === comment.id || // Cek ID sama
+            (c.message === comment.message &&
+              c.email === comment.email &&
+              c.date === comment.date) // Cek konten sama (deduplikasi)
+        )
+    );
+
+    // 3. Buang komentar yang ada di daftar hapus lokal
+    return uniqueComments.filter((c) => !deletedCommentIds.includes(c.id));
+  }, [initialComments, optimisticComments, deletedCommentIds]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,15 +76,21 @@ export default function Comments({
 
     setIsSubmitting(true);
 
-    // 1. Optimistic Update: Buat objek komentar sementara
+    // Buat ID sementara (random)
+    const tempId = Math.random().toString();
+
     const tempComment: CommentType = {
-      id: Math.random().toString(), // ID sementara
+      id: tempId,
       name: session?.user?.name || "Guest",
       email: session?.user?.email || "",
       message: message,
       userImage: session?.user?.image || "",
-      date: "Baru saja", // Tanda bahwa ini baru
+      date: "Baru saja",
     };
+
+    // UPDATE OPTIMISTIC: Langsung masukkan ke state lokal khusus
+    setOptimisticComments((prev) => [tempComment, ...prev]);
+    setMessage("");
 
     try {
       const res = await fetch("/api/comments", {
@@ -75,24 +106,20 @@ export default function Comments({
       });
 
       if (res.ok) {
-        // 2. Langsung update UI tanpa nunggu refresh server
-        setComments((prev) => [tempComment, ...prev]);
-
-        setMessage("");
-        toast({
-          title: "Berhasil!",
-          description: "Komentar kamu berhasil dikirim.",
-        });
-
-        // 3. Refresh server tetap dijalankan untuk sinkronisasi jangka panjang
+        toast({ title: "Berhasil!", description: "Komentar dikirim." });
+        // Refresh server tetap jalan untuk sinkronisasi jangka panjang
+        // Tapi UI tidak akan flicker karena kita pakai displayComments
         router.refresh();
       } else {
+        // Rollback jika gagal
+        setOptimisticComments((prev) => prev.filter((c) => c.id !== tempId));
         throw new Error("Gagal mengirim");
       }
     } catch (error) {
+      setOptimisticComments((prev) => prev.filter((c) => c.id !== tempId));
       toast({
         title: "Gagal",
-        description: "Terjadi kesalahan saat mengirim komentar.",
+        description: "Gagal mengirim komentar.",
         variant: "destructive",
       });
     } finally {
@@ -105,6 +132,9 @@ export default function Comments({
 
     setDeletingId(commentId);
 
+    // UPDATE OPTIMISTIC: Masukkan ID ke daftar hapus lokal
+    setDeletedCommentIds((prev) => [...prev, commentId]);
+
     try {
       const res = await fetch("/api/comments", {
         method: "DELETE",
@@ -113,15 +143,15 @@ export default function Comments({
       });
 
       if (res.ok) {
-        // Optimistic Delete: Langsung hilangkan dari layar
-        setComments((prev) => prev.filter((c) => c.id !== commentId));
-
         toast({ title: "Terhapus", description: "Komentar berhasil dihapus." });
         router.refresh();
       } else {
+        // Rollback jika gagal (kembalikan ke tampilan)
+        setDeletedCommentIds((prev) => prev.filter((id) => id !== commentId));
         throw new Error("Gagal menghapus");
       }
     } catch (error) {
+      setDeletedCommentIds((prev) => prev.filter((id) => id !== commentId));
       toast({
         title: "Error",
         description: "Gagal menghapus komentar.",
@@ -135,7 +165,7 @@ export default function Comments({
   return (
     <div className="mt-12 border-t border-border pt-8">
       <h3 className="text-xl font-serif font-semibold mb-6">
-        Diskusi ({comments.length}) {/* Pakai length dari state */}
+        Diskusi ({displayComments.length})
       </h3>
 
       {/* Bagian Input Komentar */}
@@ -157,7 +187,7 @@ export default function Comments({
                 variant="link"
                 className="text-xs text-muted-foreground h-auto p-0 ml-auto"
                 onClick={() => signOut()}
-                type="button" // Tambahkan type button agar tidak submit form
+                type="button"
               >
                 Keluar
               </Button>
@@ -193,10 +223,10 @@ export default function Comments({
         )}
       </div>
 
-      {/* Bagian List Komentar: RENDER DARI STATE 'comments', BUKAN 'initialComments' */}
+      {/* Bagian List Komentar: RENDER DARI 'displayComments' */}
       <div className="space-y-8 mt-10">
-        {comments.length > 0 ? (
-          comments.map((comment) => {
+        {displayComments.length > 0 ? (
+          displayComments.map((comment) => {
             const isAuthor = session?.user?.email === comment.email;
             const isOwner = session?.user?.email === OWNER_EMAIL;
             const canDelete = isAuthor || isOwner;
