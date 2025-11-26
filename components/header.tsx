@@ -7,7 +7,10 @@ export function Header() {
   return (
     <header className="border-b-2 border-foreground bg-background">
       <div className="container mx-auto px-6 py-5 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold tracking-tight uppercase">
+        <Link
+          href="/"
+          className="text-xl font-serif font-bold tracking-tight uppercase"
+        >
           Muhammad Faruq
         </Link>
 
