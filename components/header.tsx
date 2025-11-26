@@ -2,17 +2,29 @@ import Link from "next/link";
 import { Search, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import Image from "next/image";
+import logo from "@/public/logo.svg";
 
 export function Header() {
   return (
     <header className="border-b-2 border-foreground bg-background">
       <div className="container mx-auto px-6 py-5 flex items-center justify-between">
-        <Link
-          href="/"
-          className="text-xl font-serif font-bold tracking-tight uppercase"
-        >
-          Muhammad Faruq
-        </Link>
+        <div className="w-1/2 md:w-lg">
+          <Link
+            href="/"
+            className="text-sm lg:text-xl  font-serif font-bold tracking-tight uppercase flex items-center gap-3"
+          >
+            Muhammad Faruq
+            <Image
+              src="/logo.svg"
+              alt="Logo"
+              width={500}
+              height={500}
+              loading="eager"
+              className="object-contain w-8 lg:w-10 h-auto"
+            />
+          </Link>
+        </div>
 
         <nav className="hidden md:flex items-center gap-8">
           <Link
