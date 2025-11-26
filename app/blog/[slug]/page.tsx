@@ -7,6 +7,7 @@ import { Footer } from "@/components/footer";
 import { getPostBySlug, getAllPosts } from "@/lib/posts";
 import { documentToReactComponents } from "@contentful/rich-text-react-renderer";
 import { BLOCKS, MARKS } from "@contentful/rich-text-types";
+import Comments from "@/components/comments";
 
 // Konfigurasi styling untuk Rich Text
 const renderOptions = {
@@ -121,7 +122,7 @@ export default async function BlogPostPage({
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
-                  {post.readTime} {/* Ini sekarang otomatis */}
+                  {post.readTime}
                 </span>
               </div>
             </header>
@@ -134,6 +135,7 @@ export default async function BlogPostPage({
               <p className="text-muted-foreground text-sm italic">
                 Semoga ketemu di tulisan lainnya. Semoga:)
               </p>
+              <Comments />
             </div>
           </div>
         </article>
