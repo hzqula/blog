@@ -8,7 +8,9 @@ export function Footer() {
         <div className="grid md:grid-cols-3 gap-8">
           {/* Brand */}
           <div>
-            <h3 className="font-bold text-lg uppercase mb-4">Muhammad Faruq</h3>
+            <h3 className="font-bold font-serif text-lg uppercase mb-4">
+              Muhammad Faruq
+            </h3>
             <p className="text-background/70 text-sm leading-relaxed">
               Isinya banyakan absurd, teknologi, absurd, review buku, dan
               absurd.
@@ -45,7 +47,7 @@ export function Footer() {
             <h4 className="font-semibold mb-4">Tautkan</h4>
             <div className="flex items-center gap-3">
               <Link
-                href="mailto:hellhzqoolao@gmail.com"
+                href="mailto:hzqoola@gmail.com"
                 className="w-9 h-9 border border-background/30 flex items-center justify-center hover:border-background hover:bg-background hover:text-foreground transition-colors"
               >
                 <Mail className="h-4 w-4" />
