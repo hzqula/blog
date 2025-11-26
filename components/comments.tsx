@@ -1,4 +1,3 @@
-// components/comments.tsx
 "use client";
 
 import { useSession, signIn, signOut } from "next-auth/react";
@@ -8,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, Pencil, X, Check } from "lucide-react"; // Tambah icon Pencil, X, Check
 
 interface CommentType {
   id: string;
@@ -34,51 +33,48 @@ export default function Comments({
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // STATE TERPISAH: Jangan campur aduk data server dan lokal
+  // STATE DATA
   const [optimisticComments, setOptimisticComments] = useState<CommentType[]>(
     []
   );
   const [deletedCommentIds, setDeletedCommentIds] = useState<string[]>([]);
 
-  // Loading state untuk tombol hapus spesifik
+  // STATE EDITING
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editMessage, setEditMessage] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false); // Loading state untuk tombol save edit
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const OWNER_EMAIL = "hzqoola@gmail.com";
 
-  // LOGIKA PENGGABUNGAN CERDAS (The Smart Merge)
-  // Kita menggabungkan data server (initialComments) dengan data lokal (optimistic)
-  // Sambil memfilter data yang sudah dihapus secara lokal
+  // --- LOGIKA TAMPILAN (SMART MERGE UPDATE) ---
   const displayComments = useMemo(() => {
-    // 1. Gabungkan komentar server + komentar baru lokal
-    const combined = [...optimisticComments, ...initialComments];
-
-    // 2. Filter duplikat (jika server akhirnya sudah memuat komentar baru kita)
-    // Kita cek berdasarkan isi pesan & email karena ID server dan lokal beda
-    const uniqueComments = combined.filter(
-      (comment, index, self) =>
-        index ===
-        self.findIndex(
-          (c) =>
-            c.id === comment.id || // Cek ID sama
-            (c.message === comment.message &&
-              c.email === comment.email &&
-              c.date === comment.date) // Cek konten sama (deduplikasi)
-        )
+    // 1. Filter komentar server yang belum dihapus
+    const serverActive = initialComments.filter(
+      (c) => !deletedCommentIds.includes(c.id)
     );
 
-    // 3. Buang komentar yang ada di daftar hapus lokal
-    return uniqueComments.filter((c) => !deletedCommentIds.includes(c.id));
+    // 2. Buat Map dari optimistic comments untuk akses cepat
+    // (Optimistic comments berisi komentar BARU dan komentar yang DIEDIT)
+    const optimisticMap = new Map(optimisticComments.map((c) => [c.id, c]));
+
+    // 3. Gabungkan: Jika ada versi optimistic (edit), pakai itu. Jika tidak, pakai versi server.
+    const merged = serverActive.map((c) => optimisticMap.get(c.id) || c);
+
+    // 4. Tambahkan komentar baru yang benar-benar baru (tidak ada di server list)
+    const newComments = optimisticComments.filter(
+      (c) => !serverActive.find((s) => s.id === c.id)
+    );
+
+    return [...newComments, ...merged];
   }, [initialComments, optimisticComments, deletedCommentIds]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
-
     setIsSubmitting(true);
 
-    // Buat ID sementara (random)
     const tempId = Math.random().toString();
-
     const tempComment: CommentType = {
       id: tempId,
       name: session?.user?.name || "Guest",
@@ -88,7 +84,6 @@ export default function Comments({
       date: "Baru saja",
     };
 
-    // UPDATE OPTIMISTIC: Langsung masukkan ke state lokal khusus
     setOptimisticComments((prev) => [tempComment, ...prev]);
     setMessage("");
 
@@ -100,20 +95,17 @@ export default function Comments({
           name: session?.user?.name,
           email: session?.user?.email,
           userImage: session?.user?.image,
-          message: message,
+          message: tempComment.message,
           postSlug: postSlug,
         }),
       });
 
       if (res.ok) {
         toast({ title: "Berhasil!", description: "Komentar dikirim." });
-        // Refresh server tetap jalan untuk sinkronisasi jangka panjang
-        // Tapi UI tidak akan flicker karena kita pakai displayComments
         router.refresh();
       } else {
-        // Rollback jika gagal
         setOptimisticComments((prev) => prev.filter((c) => c.id !== tempId));
-        throw new Error("Gagal mengirim");
+        throw new Error("Gagal");
       }
     } catch (error) {
       setOptimisticComments((prev) => prev.filter((c) => c.id !== tempId));
@@ -127,12 +119,71 @@ export default function Comments({
     }
   };
 
+  // --- FUNGSI EDIT ---
+  const startEditing = (comment: CommentType) => {
+    setEditingId(comment.id);
+    setEditMessage(comment.message);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditMessage("");
+  };
+
+  const handleUpdate = async (comment: CommentType) => {
+    if (!editMessage.trim() || editMessage === comment.message) {
+      cancelEditing();
+      return;
+    }
+
+    setIsUpdating(true);
+
+    // Optimistic Update: Masukkan versi yang diedit ke optimisticComments
+    // Kita copy object comment lama, tapi ganti message-nya
+    const updatedComment = { ...comment, message: editMessage };
+
+    // Simpan versi lama untuk rollback jika error
+    const previousOptimistic = [...optimisticComments];
+
+    // Update state lokal
+    setOptimisticComments((prev) => {
+      // Hapus versi lama dari array optimistic (jika ada) dan tambahkan yang baru
+      const filtered = prev.filter((c) => c.id !== comment.id);
+      return [...filtered, updatedComment];
+    });
+
+    setEditingId(null); // Tutup mode edit
+
+    try {
+      const res = await fetch("/api/comments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentId: comment.id, message: editMessage }),
+      });
+
+      if (res.ok) {
+        toast({ title: "Berhasil", description: "Komentar diperbarui." });
+        router.refresh();
+      } else {
+        throw new Error("Gagal update");
+      }
+    } catch (error) {
+      // Rollback
+      setOptimisticComments(previousOptimistic);
+      toast({
+        title: "Error",
+        description: "Gagal mengedit komentar.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // --- FUNGSI DELETE ---
   const handleDelete = async (commentId: string) => {
     if (!confirm("Yakin ingin menghapus komentar ini?")) return;
-
     setDeletingId(commentId);
-
-    // UPDATE OPTIMISTIC: Masukkan ID ke daftar hapus lokal
     setDeletedCommentIds((prev) => [...prev, commentId]);
 
     try {
@@ -143,12 +194,11 @@ export default function Comments({
       });
 
       if (res.ok) {
-        toast({ title: "Terhapus", description: "Komentar berhasil dihapus." });
+        toast({ title: "Terhapus", description: "Komentar dihapus." });
         router.refresh();
       } else {
-        // Rollback jika gagal (kembalikan ke tampilan)
         setDeletedCommentIds((prev) => prev.filter((id) => id !== commentId));
-        throw new Error("Gagal menghapus");
+        throw new Error("Gagal");
       }
     } catch (error) {
       setDeletedCommentIds((prev) => prev.filter((id) => id !== commentId));
@@ -168,7 +218,7 @@ export default function Comments({
         Diskusi ({displayComments.length})
       </h3>
 
-      {/* Bagian Input Komentar */}
+      {/* Form Input Komentar Baru */}
       <div className="mb-10">
         {session ? (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -223,13 +273,15 @@ export default function Comments({
         )}
       </div>
 
-      {/* Bagian List Komentar: RENDER DARI 'displayComments' */}
+      {/* List Komentar */}
       <div className="space-y-8 mt-10">
         {displayComments.length > 0 ? (
           displayComments.map((comment) => {
             const isAuthor = session?.user?.email === comment.email;
             const isOwner = session?.user?.email === OWNER_EMAIL;
-            const canDelete = isAuthor || isOwner;
+            const canEdit = isAuthor; // Hanya author yang bisa edit
+            const canDelete = isAuthor || isOwner; // Author & Owner bisa hapus
+            const isEditing = editingId === comment.id;
 
             return (
               <div
@@ -240,6 +292,7 @@ export default function Comments({
                   <AvatarImage src={comment.userImage} alt={comment.name} />
                   <AvatarFallback>{comment.name.charAt(0)}</AvatarFallback>
                 </Avatar>
+
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -256,25 +309,75 @@ export default function Comments({
                       </span>
                     </div>
 
-                    {canDelete && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => handleDelete(comment.id)}
-                        disabled={deletingId === comment.id}
-                      >
-                        {deletingId === comment.id ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-3 w-3" />
+                    {/* Tombol Aksi (Edit/Delete) - Hanya muncul jika tidak sedang mode edit */}
+                    {!isEditing && (
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {canEdit && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                            onClick={() => startEditing(comment)}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
                         )}
-                      </Button>
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                            onClick={() => handleDelete(comment.id)}
+                            disabled={deletingId === comment.id}
+                          >
+                            {deletingId === comment.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3 w-3" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </div>
-                  <p className="text-sm text-foreground/80 leading-relaxed">
-                    {comment.message}
-                  </p>
+
+                  {/* Tampilan Pesan: Mode Edit vs Mode Baca */}
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editMessage}
+                        onChange={(e) => setEditMessage(e.target.value)}
+                        className="min-h-20 bg-background text-sm"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={cancelEditing}
+                          disabled={isUpdating}
+                        >
+                          <X className="h-3 w-3 mr-1" /> Batal
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleUpdate(comment)}
+                          disabled={isUpdating}
+                        >
+                          {isUpdating ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <>
+                              <Check className="h-3 w-3 mr-1" /> Simpan
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                      {comment.message}
+                    </p>
+                  )}
                 </div>
               </div>
             );
