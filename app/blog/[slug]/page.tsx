@@ -76,6 +76,8 @@ const renderOptions = {
   },
 };
 
+export const revalidate = 0;
+
 export async function generateStaticParams() {
   const posts = await getAllPosts();
   return posts.map((post) => ({
