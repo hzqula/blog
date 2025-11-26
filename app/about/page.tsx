@@ -1,9 +1,5 @@
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { Mail, Github, Linkedin, Instagram } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-
 export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col">
@@ -46,12 +42,10 @@ export default function AboutPage() {
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {[
-                  "Teknologi",
+                  "Lagi Nggak Mikir",
+                  "Lagi Mikir",
                   "Review Buku",
-                  "Cerita Absurd",
-                  "Catatan Belajar",
-                  "Opini",
-                  "Jurnal",
+                  "Ngasih Tau",
                 ].map((topic) => (
                   <div
                     key={topic}
