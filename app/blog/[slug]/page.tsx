@@ -109,7 +109,7 @@ export default async function BlogPostPage({
               className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Kembali ke Blog
+              Kembali ke Daftar Tulisan
             </Link>
 
             <header className="mb-10 pb-8 border-b-2 border-foreground">

@@ -14,11 +14,11 @@ export default async function BlogPage() {
         <section className="container mx-auto px-6 py-16">
           <div className="max-w-3xl mx-auto">
             <h1 className="text-3xl md:text-4xl font-serif font-semibold mb-4">
-              Tulisan
+              Hasil Nulis
             </h1>
             <p className="text-muted-foreground mb-12">
-              Isinya banyakan absurd, teknologi, absurd, review buku, dan
-              absurd.
+              Sedikit tips ketika sedang membaca tulisan-tulisan di bawah ini.
+              Jika sudah nggak sanggup, silakan melambai ke kamera.
             </p>
 
             <div className="space-y-6">
