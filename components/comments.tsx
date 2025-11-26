@@ -18,7 +18,7 @@ export default function Comments({ post }: CommentsProps) {
   const disqusShortname = "muhammadfaruq";
 
   const disqusConfig = {
-    url: `https://muhammadfaryq.vercel.com/blog/${post.slug}`,
+    url: `https://muhammadfaruq.vercel.app/blog/${post.slug}`,
     identifier: post.id,
     title: post.title,
     language: "id",
