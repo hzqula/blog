@@ -9,7 +9,7 @@ export function HeroSection() {
       <div className="grid lg:grid-cols-[auto_1fr] gap-12 items-center">
         {/* Illustration */}
         <div className="flex justify-center md:justify-start order-0">
-          <div className="w-full md:w-lg border-2 border-foreground">
+          <div className="w-full md:w-138 border-2 border-foreground">
             <Image
               src="/avatar-illustration.png"
               alt="Personal illustration"
@@ -31,10 +31,10 @@ export function HeroSection() {
             tersiksanya pikiran dan jari-jemari agar bisa menghasilkan tulisan
             yang—anggap aja—bermanfaat. Hehe.
           </p>
-          <p className="text-foreground/80 leading-relaxed mb-8 text-justify">
-            Isinya tentang apapun. Di blog ini juga hanya akan disuguhkan
-            tulisan dengan font serif dan sans-serif kecuali pada{" "}
-            <span className="font-mono">teks-teks tertentu</span>.
+          <p className="text-muted-foreground leading-relaxed mb-8 text-justify">
+            Selamat datang di blog yang biasa gue anggap sebagai "Mesin Waktu"
+            ini. Ya, secara ajaib dan pribadi bisa membawa gue ke waktu dan
+            tempat yang ditentukan.
           </p>
           <Button
             asChild

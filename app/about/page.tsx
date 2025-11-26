@@ -8,30 +8,37 @@ export default function AboutPage() {
         <section className="container mx-auto px-6 py-16 md:py-24">
           <div className="max-w-3xl mx-auto">
             <h1 className="text-3xl md:text-4xl font-serif font-semibold mb-12">
-              Tentang Gue
+              Tentang Blog Ini
             </h1>
 
             <div className="flex flex-col md:flex-row gap-10 items-start">
               <div className="flex-1 space-y-5">
                 <p className="text-lg leading-relaxed">
-                  Halo! Gue{" "}
+                  Ditulis Oleh{" "}
                   <span className="text-primary font-medium">
                     Muhammad Faruq
                   </span>
                   .
                 </p>
                 <p className="text-muted-foreground leading-relaxed">
-                  Selamat datang di blog yang biasa gue anggap sebagai "Mesin
-                  Waktu" ini. Ini adalah sudut kecil di internet tempat gue
-                  latihan nulis, membaca, dan mendokumentasikan hal-hal yang gue
-                  pelajari.
+                  Ini blog baru—yang mungkin sudah nggak baru lagi pas kalian
+                  baca—yang biasa gue anggap "Mesin Waktu". Di sini juga jadi
+                  tempat tersiksanya pikiran dan jari-jemari agar bisa
+                  menghasilkan tulisan yang—anggap aja—bermanfaat. Hehe.
                 </p>
                 <p className="text-muted-foreground leading-relaxed">
-                  Isi blog ini mungkin agak campur aduk. Mulai dari teknologi
-                  (karena gue pengen), review buku yang habis gue baca, hingga
-                  tulisan-tulisan absurd yang muncul di kepala. Gue berusaha
-                  menyuguhkan tulisan dengan tipografi yang nyaman dibaca,
-                  dominan serif dan sans-serif.
+                  Selamat datang di blog yang biasa gue anggap sebagai "Mesin
+                  Waktu" ini. Ya, secara ajaib dan pribadi bisa membawa gue ke
+                  waktu dan tempat yang ditentukan.
+                </p>
+                <p className="text-muted-foreground leading-relaxed">
+                  Isi blog ini membahas semua yang bisa gue bahas, dan tentunya
+                  sesuai dengan batas yang sudah dikasih. Apa value yang bakal
+                  didapat dari baca tulisan-tulisan di sini? Yang gue harap sih,
+                  bisa hilangin beban pikiran selama menit yang tercantum di
+                  tiap tulisannya. Tapi setelah itu yaa muncul lagi. Jika
+                  beruntung, pembaca juga bisa ikut dalam mesin waktu ini,
+                  selama persyaratan teknisnya terpenuhi. Hehe.
                 </p>
               </div>
             </div>

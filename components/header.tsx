@@ -3,7 +3,6 @@ import { Search, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Image from "next/image";
-import logo from "@/public/logo.svg";
 
 export function Header() {
   return (
