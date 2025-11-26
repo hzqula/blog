@@ -13,6 +13,15 @@ export interface Post {
   category: string;
 }
 
+export interface Comment {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  userImage: string;
+  date: string;
+}
+
 // Helper format tanggal
 const formatDate = (dateString: string) => {
   const options: Intl.DateTimeFormatOptions = {
@@ -72,4 +81,21 @@ export async function getPostBySlug(slug: string): Promise<Post | undefined> {
   }
 
   return undefined;
+}
+
+export async function getComments(slug: string): Promise<Comment[]> {
+  const entries = await client.getEntries({
+    content_type: "comment",
+    "fields.postSlug": slug,
+    order: ["-fields.date"],
+  });
+
+  return entries.items.map((item: any) => ({
+    id: item.sys.id,
+    name: item.fields.name,
+    email: item.fields.email,
+    message: item.fields.message,
+    userImage: item.fields.userImage,
+    date: formatDate(item.fields.date),
+  }));
 }

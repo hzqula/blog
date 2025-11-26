@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, Calendar } from "lucide-react";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { getPostBySlug, getAllPosts } from "@/lib/posts";
+import { getPostBySlug, getAllPosts, getComments } from "@/lib/posts";
 import { documentToReactComponents } from "@contentful/rich-text-react-renderer";
 import { BLOCKS, MARKS } from "@contentful/rich-text-types";
 import Comments from "@/components/comments";
@@ -90,6 +90,7 @@ export default async function BlogPostPage({
 }) {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
+  const comments = await getComments(slug);
 
   if (!post) {
     notFound();
@@ -136,7 +137,7 @@ export default async function BlogPostPage({
               <p className="text-muted-foreground text-sm italic">
                 Semoga ketemu di tulisan lainnya. Semoga:)
               </p>
-              <Comments post={post} />
+              <Comments postSlug={post.slug} initialComments={comments} />
             </div>
           </div>
         </article>
