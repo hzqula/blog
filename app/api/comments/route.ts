@@ -76,9 +76,13 @@ export async function PATCH(request: Request) {
 
     // 1. Ambil data komentar
     const entry = await environment.getEntry(commentId);
-    const commentAuthorEmail = entry.fields.email["en-US"];
 
-    // 2. Validasi Hak Akses (Author atau Owner)
+    // Safety check: Pastikan field email ada
+    const commentAuthorEmail = entry.fields.email
+      ? entry.fields.email["en-US"]
+      : "";
+
+    // 2. Validasi Hak Akses
     const isOwner = session.user.email === OWNER_EMAIL;
     const isAuthor = session.user.email === commentAuthorEmail;
 
@@ -90,6 +94,9 @@ export async function PATCH(request: Request) {
     }
 
     // 3. Update konten pesan
+    // Safety check: inisialisasi object message jika entah kenapa kosong
+    if (!entry.fields.message) entry.fields.message = {};
+
     entry.fields.message["en-US"] = message;
 
     // 4. Simpan & Publish ulang

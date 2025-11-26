@@ -1,3 +1,4 @@
+// components/comments.tsx
 "use client";
 
 import { useSession, signIn, signOut } from "next-auth/react";
@@ -7,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { Loader2, Trash2, Pencil, X, Check } from "lucide-react"; // Tambah icon Pencil, X, Check
+import { Loader2, Trash2, Pencil, X, Check } from "lucide-react";
 
 interface CommentType {
   id: string;
@@ -33,40 +34,56 @@ export default function Comments({
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // STATE DATA
+  // State Data
   const [optimisticComments, setOptimisticComments] = useState<CommentType[]>(
     []
   );
   const [deletedCommentIds, setDeletedCommentIds] = useState<string[]>([]);
 
-  // STATE EDITING
+  // State Editing
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editMessage, setEditMessage] = useState("");
-  const [isUpdating, setIsUpdating] = useState(false); // Loading state untuk tombol save edit
+  const [isUpdating, setIsUpdating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const OWNER_EMAIL = "hzqoola@gmail.com";
 
-  // --- LOGIKA TAMPILAN (SMART MERGE UPDATE) ---
+  // --- LOGIKA TAMPILAN (SMART MERGE & DEDUPLICATION) ---
   const displayComments = useMemo(() => {
     // 1. Filter komentar server yang belum dihapus
     const serverActive = initialComments.filter(
       (c) => !deletedCommentIds.includes(c.id)
     );
 
-    // 2. Buat Map dari optimistic comments untuk akses cepat
-    // (Optimistic comments berisi komentar BARU dan komentar yang DIEDIT)
-    const optimisticMap = new Map(optimisticComments.map((c) => [c.id, c]));
+    // 2. Pisahkan Optimistic Comments menjadi "Baru" dan "Edit"
+    const editsMap = new Map<string, CommentType>();
+    const newPosts: CommentType[] = [];
 
-    // 3. Gabungkan: Jika ada versi optimistic (edit), pakai itu. Jika tidak, pakai versi server.
-    const merged = serverActive.map((c) => optimisticMap.get(c.id) || c);
+    optimisticComments.forEach((c) => {
+      // Cek apakah ini ID sementara (format 0.xxxx) atau ID asli Contentful
+      const isTempId = c.id.startsWith("0.") && !isNaN(Number(c.id));
 
-    // 4. Tambahkan komentar baru yang benar-benar baru (tidak ada di server list)
-    const newComments = optimisticComments.filter(
-      (c) => !serverActive.find((s) => s.id === c.id)
-    );
+      if (isTempId) {
+        newPosts.push(c);
+      } else {
+        editsMap.set(c.id, c);
+      }
+    });
 
-    return [...newComments, ...merged];
+    // 3. Terapkan Edit ke data Server
+    const mergedServer = serverActive.map((c) => editsMap.get(c.id) || c);
+
+    // 4. Filter Komentar Baru (DEDUPLIKASI)
+    // Jika komentar baru sudah muncul di server (pesan & email sama),
+    // jangan tampilkan versi optimistic-nya lagi (ganti dengan versi server yang punya ID asli)
+    const uniqueNewPosts = newPosts.filter((opt) => {
+      const isSynced = mergedServer.some(
+        (srv) => srv.message === opt.message && srv.email === opt.email
+      );
+      return !isSynced;
+    });
+
+    return [...uniqueNewPosts, ...mergedServer];
   }, [initialComments, optimisticComments, deletedCommentIds]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,7 +91,9 @@ export default function Comments({
     if (!message.trim()) return;
     setIsSubmitting(true);
 
+    // ID Sementara
     const tempId = Math.random().toString();
+
     const tempComment: CommentType = {
       id: tempId,
       name: session?.user?.name || "Guest",
@@ -104,6 +123,7 @@ export default function Comments({
         toast({ title: "Berhasil!", description: "Komentar dikirim." });
         router.refresh();
       } else {
+        // Rollback jika gagal
         setOptimisticComments((prev) => prev.filter((c) => c.id !== tempId));
         throw new Error("Gagal");
       }
@@ -119,8 +139,16 @@ export default function Comments({
     }
   };
 
-  // --- FUNGSI EDIT ---
+  // --- EDIT ---
   const startEditing = (comment: CommentType) => {
+    // Cegah edit jika ID masih sementara (tunggu sync server dulu)
+    if (comment.id.startsWith("0.") && !isNaN(Number(comment.id))) {
+      toast({
+        title: "Tunggu sebentar...",
+        description: "Komentar sedang diproses server.",
+      });
+      return;
+    }
     setEditingId(comment.id);
     setEditMessage(comment.message);
   };
@@ -138,21 +166,16 @@ export default function Comments({
 
     setIsUpdating(true);
 
-    // Optimistic Update: Masukkan versi yang diedit ke optimisticComments
-    // Kita copy object comment lama, tapi ganti message-nya
     const updatedComment = { ...comment, message: editMessage };
-
-    // Simpan versi lama untuk rollback jika error
     const previousOptimistic = [...optimisticComments];
 
-    // Update state lokal
+    // Update optimistic: Hapus versi lama dari array, tambah versi baru
     setOptimisticComments((prev) => {
-      // Hapus versi lama dari array optimistic (jika ada) dan tambahkan yang baru
       const filtered = prev.filter((c) => c.id !== comment.id);
       return [...filtered, updatedComment];
     });
 
-    setEditingId(null); // Tutup mode edit
+    setEditingId(null);
 
     try {
       const res = await fetch("/api/comments", {
@@ -165,10 +188,9 @@ export default function Comments({
         toast({ title: "Berhasil", description: "Komentar diperbarui." });
         router.refresh();
       } else {
-        throw new Error("Gagal update");
+        throw new Error("Gagal");
       }
     } catch (error) {
-      // Rollback
       setOptimisticComments(previousOptimistic);
       toast({
         title: "Error",
@@ -180,9 +202,10 @@ export default function Comments({
     }
   };
 
-  // --- FUNGSI DELETE ---
+  // --- DELETE ---
   const handleDelete = async (commentId: string) => {
     if (!confirm("Yakin ingin menghapus komentar ini?")) return;
+
     setDeletingId(commentId);
     setDeletedCommentIds((prev) => [...prev, commentId]);
 
@@ -218,7 +241,7 @@ export default function Comments({
         Diskusi ({displayComments.length})
       </h3>
 
-      {/* Form Input Komentar Baru */}
+      {/* Input Form */}
       <div className="mb-10">
         {session ? (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -279,8 +302,8 @@ export default function Comments({
           displayComments.map((comment) => {
             const isAuthor = session?.user?.email === comment.email;
             const isOwner = session?.user?.email === OWNER_EMAIL;
-            const canEdit = isAuthor; // Hanya author yang bisa edit
-            const canDelete = isAuthor || isOwner; // Author & Owner bisa hapus
+            const canEdit = isAuthor;
+            const canDelete = isAuthor || isOwner;
             const isEditing = editingId === comment.id;
 
             return (
@@ -309,9 +332,10 @@ export default function Comments({
                       </span>
                     </div>
 
-                    {/* Tombol Aksi (Edit/Delete) - Hanya muncul jika tidak sedang mode edit */}
+                    {/* TOMBOL AKSI (Edit/Delete) */}
+                    {/* FIX: Gunakan md:opacity-0 agar di mobile selalu visible */}
                     {!isEditing && (
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         {canEdit && (
                           <Button
                             variant="ghost"
@@ -341,7 +365,6 @@ export default function Comments({
                     )}
                   </div>
 
-                  {/* Tampilan Pesan: Mode Edit vs Mode Baca */}
                   {isEditing ? (
                     <div className="space-y-2">
                       <Textarea
