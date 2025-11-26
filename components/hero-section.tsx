@@ -29,7 +29,7 @@ export function HeroSection() {
             Ini blog baru—yang mungkin sudah nggak baru lagi pas kalian
             baca—yang biasa gue anggap "Mesin Waktu". Di sini juga jadi tempat
             tersiksanya pikiran dan jari-jemari agar bisa menghasilkan tulisan
-            yang nggak terlalu bagus sih. Hehe.
+            yang—anggap aja—bermanfaat. Hehe.
           </p>
           <p className="text-foreground/80 leading-relaxed mb-8 text-justify">
             Isinya tentang apapun. Di blog ini juga hanya akan disuguhkan
