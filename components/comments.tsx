@@ -1,28 +1,35 @@
-// components/comments.tsx
 "use client";
 
-import Giscus from "@giscus/react";
+import { DiscussionEmbed } from "disqus-react";
 import { useTheme } from "next-themes";
 
-export default function Comments() {
+interface CommentsProps {
+  post: {
+    id: string;
+    title: string;
+    slug: string;
+  };
+}
+
+export default function Comments({ post }: CommentsProps) {
   const { theme } = useTheme();
 
+  // Ganti dengan shortname dari akun Disqus Anda
+  const disqusShortname = "muhammadfaruq";
+
+  const disqusConfig = {
+    url: `https://muhammadfaryq.vercel.com/blog/${post.slug}`,
+    identifier: post.id,
+    title: post.title,
+    language: "id",
+  };
+
   return (
-    <div className="mt-10">
-      <Giscus
-        id="comments"
-        repo="hzqula/blog-comments"
-        repoId="R_kgDOQdIszA."
-        category="General"
-        categoryId="DIC_kwDOQdIszM4CzC3d"
-        mapping="pathname"
-        term="Welcome to @giscus/react component!"
-        reactionsEnabled="1"
-        emitMetadata="0"
-        inputPosition="top"
-        theme={theme === "dark" ? "dark" : "light"}
-        lang="id"
-        loading="lazy"
+    <div className="mt-10 p-6 bg-card border border-border rounded-lg">
+      <DiscussionEmbed
+        key={theme + post.id}
+        shortname={disqusShortname}
+        config={disqusConfig}
       />
     </div>
   );

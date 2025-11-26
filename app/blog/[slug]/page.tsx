@@ -56,6 +56,7 @@ const renderOptions = {
             alt={title || "Blog Image"}
             width={file.details.image.width}
             height={file.details.image.height}
+            loading="eager"
             className="w-full h-auto object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
           />
@@ -135,7 +136,7 @@ export default async function BlogPostPage({
               <p className="text-muted-foreground text-sm italic">
                 Semoga ketemu di tulisan lainnya. Semoga:)
               </p>
-              <Comments />
+              <Comments post={post} />
             </div>
           </div>
         </article>
