@@ -8,10 +8,9 @@ export function Footer() {
         <div className="grid md:grid-cols-3 gap-8">
           {/* Brand */}
           <div>
-            <h3 className="font-bold text-lg uppercase mb-4">Singkatnya</h3>
+            <h3 className="font-bold text-lg mb-4">Singkatnya</h3>
             <p className="text-background/70 text-sm leading-relaxed">
-              Isinya banyakan absurd, teknologi, absurd, review buku, dan
-              absurd.
+              Gue pelajar yang fakir ilmu pengetahuan.
             </p>
           </div>
 

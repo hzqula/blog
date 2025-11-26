@@ -8,6 +8,58 @@ import { getPostBySlug, getAllPosts, getComments } from "@/lib/posts";
 import { documentToReactComponents } from "@contentful/rich-text-react-renderer";
 import { BLOCKS, MARKS } from "@contentful/rich-text-types";
 import Comments from "@/components/comments";
+import { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
+
+  if (!post) {
+    return {
+      title: "Tulisan Tidak Ditemukan",
+    };
+  }
+
+  // Cari URL gambar utama jika ada (dari konten Rich Text)
+  let ogImage = "/placeholder-logo.png"; // Gambar default
+  // Logika sederhana untuk mencari gambar pertama di konten (opsional tapi bagus)
+  const imageNode = post.content.content.find(
+    (node: any) => node.nodeType === "embedded-asset-block"
+  );
+  if (imageNode) {
+    ogImage = `https:${imageNode.data.target.fields.file.url}`;
+  }
+
+  return {
+    title: post.title,
+    description: post.excerpt || post.title,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      url: `https://muhammadfaruq.vercel.app/blog/${post.slug}`,
+      siteName: "Muhammad Faruq",
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+        },
+      ],
+      locale: "id_ID",
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt,
+      images: [ogImage],
+    },
+  };
+}
 
 // Konfigurasi styling untuk Rich Text
 const renderOptions = {
