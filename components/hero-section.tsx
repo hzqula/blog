@@ -28,13 +28,13 @@ export function HeroSection() {
           <p className="text-foreground/80 leading-relaxed mb-4 text-justify">
             Ini blog baru—yang mungkin sudah nggak baru lagi pas kalian
             baca—yang biasa gue anggap "Mesin Waktu". Di sini juga jadi tempat
-            tersiksanya pikiran dan jari-jemari agar bisa menghasilkan tulisan
+            tersiksanya pikiran dan jari-jemari agar bisa ngehasilin tulisan
             yang—anggap aja—bermanfaat. Hehe.
           </p>
           <p className="text-muted-foreground leading-relaxed mb-8 text-justify">
             Selamat datang di blog yang biasa gue anggap sebagai "Mesin Waktu"
             ini. Ya, secara ajaib dan pribadi bisa membawa gue ke waktu dan
-            tempat yang ditentukan.
+            tempat yang ditentuin.
           </p>
           <Button
             asChild

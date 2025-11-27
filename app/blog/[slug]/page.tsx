@@ -20,7 +20,7 @@ export async function generateMetadata({
 
   if (!post) {
     return {
-      title: "Tulisan Tidak Ditemukan",
+      title: "Tulisan Nggak Ditemuin",
     };
   }
 
