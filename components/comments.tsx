@@ -238,7 +238,7 @@ export default function Comments({
   return (
     <div className="mt-12 border-t border-border pt-8">
       <h3 className="text-xl font-serif font-semibold mb-6">
-        Diskusi ({displayComments.length})
+        Yang Komen ({displayComments.length})
       </h3>
 
       {/* Input Form */}
@@ -320,12 +320,12 @@ export default function Comments({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium text-sm">
-                        {comment.name}
                         {comment.email === OWNER_EMAIL && (
-                          <span className="ml-2 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold">
-                            AUTHOR
+                          <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 font-bold">
+                            PENULIS
                           </span>
                         )}
+                        {comment.email !== OWNER_EMAIL && comment.name}
                       </h4>
                       <span className="text-xs text-muted-foreground">
                         • {comment.date}

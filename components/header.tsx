@@ -8,10 +8,10 @@ export function Header() {
   return (
     <header className="border-b-2 border-foreground bg-background">
       <div className="container mx-auto px-6 py-5 flex items-center justify-between">
-        <div className="w-1/2 md:w-lg">
+        <div className="w-full md:w-lg">
           <Link
             href="/"
-            className="text-sm lg:text-xl  font-serif font-bold tracking-tight uppercase flex items-center gap-3"
+            className="text-base lg:text-xl  font-serif font-bold tracking-tight uppercase flex items-center gap-4 lg:gap-3"
           >
             Muhammad Faruq
             <Image
