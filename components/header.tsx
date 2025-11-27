@@ -3,7 +3,7 @@ import { Search, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Image from "next/image";
-
+//
 export function Header() {
   return (
     <header className="border-b-2 border-foreground bg-background">
