@@ -24,12 +24,12 @@ export default function AboutPage() {
                   Ini blog baru—yang mungkin sudah nggak baru lagi pas kalian
                   baca—yang biasa gue anggap "Mesin Waktu". Di sini juga jadi
                   tempat tersiksanya pikiran dan jari-jemari agar bisa
-                  menghasilkan tulisan yang—anggap aja—bermanfaat. Hehe.
+                  ngehasilin tulisan yang—anggap aja—bermanfaat. Hehe.
                 </p>
                 <p className="text-muted-foreground leading-relaxed">
                   Selamat datang di blog yang biasa gue anggap sebagai "Mesin
                   Waktu" ini. Ya, secara ajaib dan pribadi bisa membawa gue ke
-                  waktu dan tempat yang ditentukan.
+                  waktu dan tempat yang ditentuin.
                 </p>
                 <p className="text-muted-foreground leading-relaxed">
                   Isi blog ini membahas semua yang bisa gue bahas, dan tentunya
