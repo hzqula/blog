@@ -24,7 +24,12 @@ export interface Comment {
 
 // Helper format tanggal
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("id-ID", { timeZone: "UTC" });
+  return new Date(dateString).toLocaleDateString("id-ID", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "Asia/Jakarta",
+  });
 };
 
 // Helper kalkulasi Read Time
