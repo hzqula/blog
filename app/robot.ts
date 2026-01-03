@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: "/api/",
     },
-    sitemap: "https://muhammadfaruq.vercel.app/sitemap.xml",
+    sitemap: "https://muhammadfaruq.me/sitemap.xml",
   };
 }
