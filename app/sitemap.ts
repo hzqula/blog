@@ -3,7 +3,7 @@ import { getAllPosts } from "@/lib/posts";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getAllPosts();
-  const baseUrl = "https://muhammadfaruq.vercel.app"; // Ganti URL production Anda
+  const baseUrl = "https://muhammadfaruq.me"; // Ganti URL production Anda
 
   const blogPosts = posts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,

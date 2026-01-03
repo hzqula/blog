@@ -40,7 +40,7 @@ export async function generateMetadata({
     openGraph: {
       title: post.title,
       description: post.excerpt,
-      url: `https://muhammadfaruq.vercel.app/blog/${post.slug}`,
+      url: `https://muhammadfaruq.me/blog/${post.slug}`,
       siteName: "Muhammad Faruq",
       images: [
         {
