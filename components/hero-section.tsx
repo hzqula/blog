@@ -13,8 +13,8 @@ export function HeroSection() {
             <Image
               src="/avatar-illustration.png"
               alt="Personal illustration"
-              width={1000}
-              height={1000}
+              width={3040}
+              height={1408}
               loading="eager"
               className="object-contain w-full h-auto"
             />
