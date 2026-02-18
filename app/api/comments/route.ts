@@ -56,8 +56,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error saving comment:", error);
+    // Tambahkan ini sementara:
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "Gagal menyimpan komentar" },
+      { error: "Gagal menyimpan komentar", detail: errorMessage },
       { status: 500 },
     );
   }
