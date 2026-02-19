@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image"; // Import Image
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, Calendar } from "lucide-react";
 import { Header } from "@/components/header";
@@ -13,7 +13,7 @@ import { Metadata } from "next";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ category: string; slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
@@ -24,14 +24,12 @@ export async function generateMetadata({
     };
   }
 
-  // Cari URL gambar utama jika ada (dari konten Rich Text)
-  let ogImage = "/placeholder-logo.png"; // Gambar default
-  // Logika sederhana untuk mencari gambar pertama di konten (opsional tapi bagus)
+  let ogImage = "/placeholder-logo.png";
   const imageNode = post.content.content.find(
-    (node: any) => node.nodeType === "embedded-asset-block"
+    (node: any) => node.nodeType === "embedded-asset-block",
   );
   if (imageNode) {
-    ogImage = `https:${imageNode.data.target.fields.file.url}`;
+    ogImage = `https:${(imageNode as any).data.target.fields.file.url}`;
   }
 
   return {
@@ -40,15 +38,9 @@ export async function generateMetadata({
     openGraph: {
       title: post.title,
       description: post.excerpt,
-      url: `https://muhammadfaruq.me/blog/${post.slug}`,
+      url: `https://muhammadfaruq.me/blog/${post.category.slug}/${post.slug}`,
       siteName: "Muhammad Faruq",
-      images: [
-        {
-          url: ogImage,
-          width: 1200,
-          height: 630,
-        },
-      ],
+      images: [{ url: ogImage, width: 1200, height: 630 }],
       locale: "id_ID",
       type: "article",
     },
@@ -61,7 +53,6 @@ export async function generateMetadata({
   };
 }
 
-// Konfigurasi styling untuk Rich Text
 const renderOptions = {
   renderNode: {
     [BLOCKS.PARAGRAPH]: (node: any, children: any) => (
@@ -133,6 +124,7 @@ export const revalidate = 0;
 export async function generateStaticParams() {
   const posts = await getAllPosts();
   return posts.map((post) => ({
+    category: post.category.slug,
     slug: post.slug,
   }));
 }
@@ -140,13 +132,18 @@ export async function generateStaticParams() {
 export default async function BlogPostPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ category: string; slug: string }>;
 }) {
-  const { slug } = await params;
+  const { category: categorySlug, slug } = await params;
   const post = await getPostBySlug(slug);
   const comments = await getComments(slug);
 
   if (!post) {
+    notFound();
+  }
+
+  // Validasi category slug cocok
+  if (post.category.slug && post.category.slug !== categorySlug) {
     notFound();
   }
 
@@ -157,17 +154,20 @@ export default async function BlogPostPage({
         <article className="container mx-auto px-6 py-12 md:py-20">
           <div className="max-w-2xl mx-auto">
             <Link
-              href="/blog"
+              href={`/blog/${post.category.slug}`}
               className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Kembali ke Daftar Tulisan
+              Kembali ke {post.category.name}
             </Link>
 
             <header className="mb-10 pb-8 border-b-2 border-foreground">
-              <span className="text-xs font-medium text-primary uppercase tracking-wide">
-                {post.category}
-              </span>
+              <Link
+                href={`/blog/${post.category.slug}`}
+                className="text-xs font-medium text-primary uppercase tracking-wide hover:underline underline-offset-4"
+              >
+                {post.category.name}
+              </Link>
               <h1 className="text-3xl md:text-4xl font-serif font-semibold leading-tight mt-3 mb-4 text-balance">
                 {post.title}
               </h1>

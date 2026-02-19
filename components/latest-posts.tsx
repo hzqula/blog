@@ -21,12 +21,15 @@ export async function LatestPosts() {
       <div className="divide-y divide-border">
         {recentPosts.map((post) => (
           <article key={post.id} className="py-6 group">
-            <Link href={`/blog/${post.slug}`} className="block">
+            <Link
+              href={`/blog/${post.category.slug}/${post.slug}`}
+              className="block"
+            >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-xs font-medium text-primary uppercase tracking-wide">
-                      {post.category}
+                      {post.category.name}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {post.readTime}
