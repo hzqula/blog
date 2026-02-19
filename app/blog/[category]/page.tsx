@@ -30,11 +30,18 @@ export async function generateMetadata({
 }
 
 export async function generateStaticParams() {
-  const categories = await getAllCategories();
-  return categories.map((cat) => ({ category: cat.slug }));
+  try {
+    const categories = await getAllCategories();
+    return categories.map((cat) => ({ category: cat.slug }));
+  } catch (error) {
+    console.error("Error generating static params for categories:", error);
+    return [];
+  }
 }
 
-export const revalidate = 0;
+// Gunakan "force-dynamic" agar selalu render fresh di server
+// Ini menghindari konflik antara generateStaticParams + revalidate: 0
+export const dynamic = "force-dynamic";
 
 export default async function CategoryPage({
   params,
@@ -42,13 +49,20 @@ export default async function CategoryPage({
   params: Promise<{ category: string }>;
 }) {
   const { category: categorySlug } = await params;
-  const category = await getCategoryBySlug(categorySlug);
 
-  if (!category) {
+  let category;
+  let posts;
+
+  try {
+    category = await getCategoryBySlug(categorySlug);
+    if (!category) {
+      notFound();
+    }
+    posts = await getPostsByCategory(categorySlug);
+  } catch (error) {
+    console.error("Error loading category page:", error);
     notFound();
   }
-
-  const posts = await getPostsByCategory(categorySlug);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -70,22 +84,22 @@ export default async function CategoryPage({
                 Kategori
               </span>
               <h1 className="text-3xl md:text-4xl font-serif font-semibold mb-4">
-                {category.name}
+                {category!.name}
               </h1>
-              {category.description && (
+              {category!.description && (
                 <p className="text-muted-foreground leading-relaxed text-lg">
-                  {category.description}
+                  {category!.description}
                 </p>
               )}
               <p className="text-sm text-muted-foreground mt-4">
-                {posts.length} tulisan
+                {posts!.length} tulisan
               </p>
             </div>
 
             {/* List Post */}
             <div className="space-y-6">
-              {posts.length > 0 ? (
-                posts.map((post) => (
+              {posts!.length > 0 ? (
+                posts!.map((post) => (
                   <article
                     key={post.id}
                     className="group bg-card border border-border rounded-lg p-6 hover:border-primary/50 transition-colors"
