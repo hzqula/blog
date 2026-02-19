@@ -42,27 +42,6 @@ export default function AboutPage() {
                 </p>
               </div>
             </div>
-
-            <div className="mt-16 pt-12 border-t border-border">
-              <h2 className="text-xl font-serif font-semibold mb-6">
-                Topik Tulisan
-              </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {[
-                  "Lagi Nggak Mikir",
-                  "Lagi Mikir",
-                  "Review Buku",
-                  "Ngasih Tau",
-                ].map((topic) => (
-                  <div
-                    key={topic}
-                    className="bg-secondary/50 rounded-lg px-4 py-3 text-sm font-medium text-center"
-                  >
-                    {topic}
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
       </main>
