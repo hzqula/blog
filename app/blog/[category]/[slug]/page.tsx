@@ -189,7 +189,7 @@ export default async function BlogPostPage({
 
             <div className="mt-12 pt-8 border-t border-border">
               <p className="text-muted-foreground text-sm italic">
-                Semoga ketemu di tulisan lainnya. Semoga:)
+                Dah. Semoga ketemu di tulisan lainnya. Semoga...
               </p>
               <Comments postSlug={post.slug} initialComments={comments} />
             </div>

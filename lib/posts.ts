@@ -46,12 +46,22 @@ const calculateReadTime = (document: Document): string => {
   return `${minutes} menit baca`;
 };
 
+// Description di category adalah Rich Text, perlu dikonversi ke string
+const parseCategoryDescription = (descriptionField: any): string => {
+  if (!descriptionField) return "";
+  if (typeof descriptionField === "string") return descriptionField;
+  // Rich Text Document
+  if (descriptionField?.nodeType === "document") {
+    return documentToPlainTextString(descriptionField);
+  }
+  return "";
+};
+
 const parseCategory = (categoryField: any): Category => {
   if (!categoryField) {
     return { id: "", name: "", slug: "", description: "" };
   }
 
-  // Jika masih string lama
   if (typeof categoryField === "string") {
     return {
       id: "",
@@ -62,12 +72,13 @@ const parseCategory = (categoryField: any): Category => {
   }
 
   // Reference entry Contentful
+  // Field di blogPost yang bertipe Reference ke category bernama "description"
   if (categoryField?.fields) {
     return {
       id: categoryField.sys?.id || "",
       name: String(categoryField.fields.name || ""),
       slug: String(categoryField.fields.slug || ""),
-      description: String(categoryField.fields.description || ""),
+      description: parseCategoryDescription(categoryField.fields.description),
     };
   }
 
@@ -83,7 +94,7 @@ export async function getAllCategories(): Promise<Category[]> {
     id: item.sys.id,
     name: String(item.fields.name || ""),
     slug: String(item.fields.slug || ""),
-    description: String(item.fields.description || ""),
+    description: parseCategoryDescription(item.fields.description),
   }));
 }
 
@@ -104,7 +115,7 @@ export async function getCategoryBySlug(
     id: found.sys.id,
     name: String(found.fields.name || ""),
     slug: String(found.fields.slug || ""),
-    description: String(found.fields.description || ""),
+    description: parseCategoryDescription(found.fields.description),
   };
 }
 
@@ -123,7 +134,8 @@ export async function getAllPosts(): Promise<Post[]> {
     date: formatDate(item.fields.date),
     slug: item.fields.slug,
     readTime: calculateReadTime(item.fields.content),
-    category: parseCategory(item.fields.category),
+    // Field reference ke category di blogPost namanya "description" di Contentful
+    category: parseCategory(item.fields.description),
   }));
 }
 
@@ -135,7 +147,8 @@ export async function getPostsByCategory(
 
   const entries = await client.getEntries({
     content_type: "blogPost",
-    "fields.category.sys.id": category.id,
+    // Field reference ke category di blogPost namanya "description"
+    "fields.description.sys.id": category.id,
     order: ["-fields.date"] as any,
     include: 2,
   });
@@ -148,7 +161,7 @@ export async function getPostsByCategory(
     date: formatDate(item.fields.date),
     slug: item.fields.slug,
     readTime: calculateReadTime(item.fields.content),
-    category: parseCategory(item.fields.category),
+    category: parseCategory(item.fields.description),
   }));
 }
 
@@ -171,7 +184,7 @@ export async function getPostBySlug(slug: string): Promise<Post | undefined> {
     date: formatDate(item.fields.date),
     slug: item.fields.slug,
     readTime: calculateReadTime(item.fields.content),
-    category: parseCategory(item.fields.category),
+    category: parseCategory(item.fields.description),
   };
 }
 
