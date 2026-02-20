@@ -1,8 +1,7 @@
-// components/comments.tsx
 "use client";
 
 import { useSession, signIn, signOut } from "next-auth/react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -34,13 +33,11 @@ export default function Comments({
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // State Data
   const [optimisticComments, setOptimisticComments] = useState<CommentType[]>(
-    []
+    [],
   );
   const [deletedCommentIds, setDeletedCommentIds] = useState<string[]>([]);
 
-  // State Editing
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editMessage, setEditMessage] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
@@ -48,21 +45,16 @@ export default function Comments({
 
   const OWNER_EMAIL = "hzqoola@gmail.com";
 
-  // --- LOGIKA TAMPILAN (SMART MERGE & DEDUPLICATION) ---
   const displayComments = useMemo(() => {
-    // 1. Filter komentar server yang belum dihapus
     const serverActive = initialComments.filter(
-      (c) => !deletedCommentIds.includes(c.id)
+      (c) => !deletedCommentIds.includes(c.id),
     );
 
-    // 2. Pisahkan Optimistic Comments menjadi "Baru" dan "Edit"
     const editsMap = new Map<string, CommentType>();
     const newPosts: CommentType[] = [];
 
     optimisticComments.forEach((c) => {
-      // Cek apakah ini ID sementara (format 0.xxxx) atau ID asli Contentful
       const isTempId = c.id.startsWith("0.") && !isNaN(Number(c.id));
-
       if (isTempId) {
         newPosts.push(c);
       } else {
@@ -70,15 +62,11 @@ export default function Comments({
       }
     });
 
-    // 3. Terapkan Edit ke data Server
     const mergedServer = serverActive.map((c) => editsMap.get(c.id) || c);
 
-    // 4. Filter Komentar Baru (DEDUPLIKASI)
-    // Jika komentar baru sudah muncul di server (pesan & email sama),
-    // jangan tampilkan versi optimistic-nya lagi (ganti dengan versi server yang punya ID asli)
     const uniqueNewPosts = newPosts.filter((opt) => {
       const isSynced = mergedServer.some(
-        (srv) => srv.message === opt.message && srv.email === opt.email
+        (srv) => srv.message === opt.message && srv.email === opt.email,
       );
       return !isSynced;
     });
@@ -91,7 +79,6 @@ export default function Comments({
     if (!message.trim()) return;
     setIsSubmitting(true);
 
-    // ID Sementara
     const tempId = Math.random().toString();
 
     const tempComment: CommentType = {
@@ -123,7 +110,6 @@ export default function Comments({
         toast({ title: "Berhasil!", description: "Komentar dikirim." });
         router.refresh();
       } else {
-        // Rollback jika gagal
         setOptimisticComments((prev) => prev.filter((c) => c.id !== tempId));
         throw new Error("Gagal");
       }
@@ -139,9 +125,7 @@ export default function Comments({
     }
   };
 
-  // --- EDIT ---
   const startEditing = (comment: CommentType) => {
-    // Cegah edit jika ID masih sementara (tunggu sync server dulu)
     if (comment.id.startsWith("0.") && !isNaN(Number(comment.id))) {
       toast({
         title: "Tunggu sebentar...",
@@ -169,7 +153,6 @@ export default function Comments({
     const updatedComment = { ...comment, message: editMessage };
     const previousOptimistic = [...optimisticComments];
 
-    // Update optimistic: Hapus versi lama dari array, tambah versi baru
     setOptimisticComments((prev) => {
       const filtered = prev.filter((c) => c.id !== comment.id);
       return [...filtered, updatedComment];
@@ -202,7 +185,6 @@ export default function Comments({
     }
   };
 
-  // --- DELETE ---
   const handleDelete = async (commentId: string) => {
     if (!confirm("Yakin ingin menghapus komentar ini?")) return;
 
@@ -311,31 +293,33 @@ export default function Comments({
                 key={comment.id}
                 className="flex gap-4 group animate-in fade-in slide-in-from-bottom-2"
               >
-                <Avatar className="h-10 w-10 border border-border">
+                <Avatar className="h-10 w-10 border border-border shrink-0">
                   <AvatarImage src={comment.userImage} alt={comment.name} />
                   <AvatarFallback>{comment.name.charAt(0)}</AvatarFallback>
                 </Avatar>
 
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium text-sm">
-                        {comment.email === OWNER_EMAIL && (
+                <div className="flex-1 space-y-1 min-w-0">
+                  {/* Header: nama+tanggal di kiri, tombol aksi di kanan */}
+                  <div className="flex items-start justify-between gap-2">
+                    {/* Nama dan tanggal — di mobile tanggal turun ke bawah nama */}
+                    <div className="flex flex-col md:flex-row md:items-center md:gap-2">
+                      <h4 className="font-medium text-sm leading-snug">
+                        {comment.email === OWNER_EMAIL ? (
                           <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 font-bold">
                             PENULIS
                           </span>
+                        ) : (
+                          comment.name
                         )}
-                        {comment.email !== OWNER_EMAIL && comment.name}
                       </h4>
-                      <span className="text-xs text-muted-foreground">
-                        • {comment.date}
+                      <span className="text-xs text-muted-foreground md:before:content-['•'] md:before:mr-2">
+                        {comment.date}
                       </span>
                     </div>
 
-                    {/* TOMBOL AKSI (Edit/Delete) */}
-                    {/* FIX: Gunakan md:opacity-0 agar di mobile selalu visible */}
+                    {/* Tombol edit/hapus */}
                     {!isEditing && (
-                      <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         {canEdit && (
                           <Button
                             variant="ghost"
